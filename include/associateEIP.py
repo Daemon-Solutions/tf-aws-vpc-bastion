@@ -41,9 +41,18 @@ def associatedRouteTableId(subnet_id):
     routeTable_id = ec2.describe_route_tables(Filters=[{'Name':'association.subnet-id','Values':[subnet_id]}])['RouteTables'][0]['RouteTableId']
     return routeTable_id
 
+def doesRouteExist(routeTable_id, instance_id):
+	routes = ec2r.RouteTable(routeTable_id).routes
+	for route in routes:
+		if route.instance_id == instance_id:
+			return True
+	return False
+
 def addRoute(instance_id, subnet_id):
     routeTable_id = associatedRouteTableId(subnet_id)
-    ec2.create_route(RouteTableId=routeTable_id, InstanceId=instance_id, DestinationCidrBlock='0.0.0.0/0')
+	routeExists = doesRouteExist(routeTable_id, instance_id)
+	if not routeExists:
+	    ec2.create_route(RouteTableId=routeTable_id, InstanceId=instance_id, DestinationCidrBlock='0.0.0.0/0')
 
 def lambda_handler(event, context):
 	sns_json = json.loads(event['Records'][0]['Sns']['Message'])
