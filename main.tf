@@ -150,6 +150,27 @@ resource "aws_iam_role_policy" "bastion_lambda_ec2_describe" {
 EOF
 }
 
+resource "aws_iam_role_policy" "bastion_lambda_cloudwatch_all" {
+  name = "${var.name}-lambda-cloudwatch-all"
+
+  role = "${aws_iam_role.bastion_lambda_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "cloudwatch:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role_policy" "bastion_lambda_eip_associate" {
   name = "${var.name}-lambda-eip-associate"
 
@@ -171,7 +192,27 @@ resource "aws_iam_role_policy" "bastion_lambda_eip_associate" {
 EOF
 }
 
+resource "aws_iam_role_policy" "bastion_lambda_routes" {
+  name = "${var.name}-lambda-routes"
 
+  role = "${aws_iam_role.bastion_lambda_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:CreateRoute",
+        "ec2:DeleteRoute"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
 
 # IAM Instance Profile
 resource "aws_iam_instance_profile" "bastion_instance_profile" {
