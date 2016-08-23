@@ -39,7 +39,13 @@ def matchAZ(instance_id, subnet_ids):
 
 
 def associatedRouteTableId(subnet_id):
-    routeTable_id = ec2.describe_route_tables(Filters=[{'Name': 'association.subnet-id', 'Values': [subnet_id]}])['RouteTables'][0]['RouteTableId']
+    routeTable_id = ec2.describe_route_tables(Filters=[
+        {
+            'Name': 'association.subnet-id',
+            'Values': [subnet_id]
+        }
+        ]
+        )['RouteTables'][0]['RouteTableId']
     return routeTable_id
 
 
@@ -60,18 +66,12 @@ def addRoute(instance_id, subnet_id):
 def lambda_handler(event, context):
     sns_json = json.loads(event['Records'][0]['Sns']['Message'])
     instance_id = sns_json['EC2InstanceId'].strip()
-    print instance_id
     tag_ips = expectedEIP(instance_id)
-    print tag_ips
     tag_subnets = privateSubnets(instance_id)
-    print tag_subnets
     available_eips = availableEIPs()
-    print available_eips
     expected_eips = tag_ips.split(',')
-    print expected_eips
     subnet_ids = tag_subnets.split(',')
     subnet_id = matchAZ(instance_id, subnet_ids)
-    print subnet_id
 
     if len(available_eips) < 1:
         exit('Error: no available EIPs')
@@ -80,7 +80,6 @@ def lambda_handler(event, context):
     for eip in available_eips:
         if eip['PublicIp'] in expected_eips:
             alloc_id = eip['AllocationId']
-            print alloc_id
             break
 
     if not alloc_id:
