@@ -150,8 +150,8 @@ resource "aws_iam_role_policy" "bastion_lambda_ec2_describe" {
 EOF
 }
 
-resource "aws_iam_role_policy" "bastion_lambda_cloudwatch_all" {
-  name = "${var.name}-lambda-cloudwatch-all"
+resource "aws_iam_role_policy" "bastion_lambda_logs" {
+  name = "${var.name}-lambda-logs"
 
   role = "${aws_iam_role.bastion_lambda_role.id}"
 
@@ -161,10 +161,13 @@ resource "aws_iam_role_policy" "bastion_lambda_cloudwatch_all" {
   "Statement": [
     {
       "Action": [
-        "cloudwatch:*"
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
       ],
       "Effect": "Allow",
-      "Resource": "*"
+      "Resource": "arn:aws:logs:*:*:*"
     }
   ]
 }
