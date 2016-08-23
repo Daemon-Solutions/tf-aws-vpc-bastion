@@ -44,7 +44,7 @@ def associatedRouteTableId(subnet_id):
 def cleanRoutes(routeTable_id):
 	routes = ec2r.RouteTable(routeTable_id).routes
 	for route in routes:
-		if route.instance_id::
+		if route.destination_cidr_block == '0.0.0.0/0':
 			route.delete()
 
 def addRoute(instance_id, subnet_id):
