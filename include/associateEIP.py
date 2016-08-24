@@ -63,18 +63,16 @@ def addRoute(instance_id, subnet_id):
                      DestinationCidrBlock='0.0.0.0/0')
 
 
-def lambda_handler(event, context):
-    sns_json = json.loads(event['Records'][0]['Sns']['Message'])
-    instance_id = sns_json['EC2InstanceId'].strip()
-    tag_ips = expectedEIP(instance_id)
+def doAssociation(instance_id):
     tag_subnets = privateSubnets(instance_id)
+    tag_ips = expectedEIP(instance_id)
     available_eips = availableEIPs()
     expected_eips = tag_ips.split(',')
     subnet_ids = tag_subnets.split(',')
     subnet_id = matchAZ(instance_id, subnet_ids)
 
     if len(available_eips) < 1:
-        exit('Error: no available EIPs')
+        return False
     alloc_id = None
 
     for eip in available_eips:
@@ -83,7 +81,7 @@ def lambda_handler(event, context):
             break
 
     if not alloc_id:
-        exit('Error: Expected EIP not available')
+        return False
     else:
         resp = ec2.associate_address(InstanceId=instance_id,
                                      AllocationId=alloc_id)
@@ -91,6 +89,33 @@ def lambda_handler(event, context):
     addRoute(instance_id, subnet_id)
 
     if 'AssociationId' not in resp:
-        exit('Error: EIP failed to associate.')
+        return False
     else:
-        return "Association complete"
+        return True
+
+
+def lambda_handler(event, context):
+    sns_json = json.loads(event['Records'][0]['Sns']['Message'])
+    event_type = sns_json['Event']
+    if event_type == "autoscaling:TEST_NOTIFICATION":
+        asg = boto3.client('autoscaling')
+        asi = "AutoScalingInstances"
+        instance_ids = [
+            i['InstanceId']
+            for i in asg.describe_auto_scaling_instances()[asi]
+            if i['AutoScalingGroupName'] == sns_json['AutoScalingGroupName']
+        ]
+    else:
+        instance_ids = [ sns_json['EC2InstanceId'].strip() ]
+
+    associations = ""
+    note = "InstanceId"
+    win = "associated.\n"
+    lose = "failed to associate.\n"
+    for instance_id in instance_ids:
+        response = doAssociation(instance_id)
+        if response:
+            associations += "{} {} {}".format(note, instance_id, win)
+        else:
+            associations += "{} {} {}".format(note, instance_id, lose)
+    return associations
