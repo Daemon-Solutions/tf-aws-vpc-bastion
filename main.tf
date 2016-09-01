@@ -107,6 +107,7 @@ resource "aws_lambda_function" "attach_eip" {
   role             = "${aws_iam_role.bastion_lambda_role.arn}"
   handler          = "associateEIP.lambda_handler"
   runtime          = "python2.7"
+  timeout          = "6"
 }
 
 resource "aws_iam_role" "bastion_lambda_role" {
