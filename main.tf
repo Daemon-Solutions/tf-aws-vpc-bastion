@@ -1,4 +1,4 @@
-# VPC
+## VPC
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc_cidr}"
 
@@ -21,7 +21,8 @@ resource "aws_vpc_dhcp_options_association" "vpc_dhcp" {
   dhcp_options_id = "${aws_vpc_dhcp_options.vpc.id}"
 }
 
-# Public Subnets
+
+## Public Subnets
 resource "aws_internet_gateway" "igw" {
   vpc_id = "${aws_vpc.vpc.id}"
 
@@ -57,7 +58,8 @@ resource "aws_route_table_association" "public" {
   route_table_id = "${aws_route_table.public.id}"
 }
 
-# Private Subnets
+
+## Private Subnets
 resource "aws_subnet" "private" {
   vpc_id            = "${aws_vpc.vpc.id}"
   cidr_block        = "${element(split(",", var.private_subnets), count.index)}"
@@ -70,8 +72,8 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_route_table" "private" {
-  count      = "${length(split(",", var.private_subnets))}"
-  vpc_id     = "${aws_vpc.vpc.id}"
+  count  = "${length(split(",", var.private_subnets))}"
+  vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
     Name = "${var.name}-private-route"
@@ -84,14 +86,14 @@ resource "aws_route_table_association" "private" {
   route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
 }
 
-# Lambda
 
+## Lambda
 resource "aws_lambda_permission" "bastion_sns" {
-  statement_id = "AllowExecutionFromSNS"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.attach_eip.arn}"
-  principal = "sns.amazonaws.com"
-  source_arn = "${aws_sns_topic.bastion_asg.arn}"
+  principal     = "sns.amazonaws.com"
+  source_arn    = "${aws_sns_topic.bastion_asg.arn}"
 }
 
 resource "aws_sns_topic_subscription" "bastion_asg" {
@@ -112,6 +114,7 @@ resource "aws_lambda_function" "attach_eip" {
 
 resource "aws_iam_role" "bastion_lambda_role" {
   name = "${var.name}-lambda-iam-role"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -239,14 +242,16 @@ resource "aws_iam_role_policy" "bastion_lambda_routes" {
 EOF
 }
 
-# IAM Instance Profile
+
+## IAM Instance Profile
 resource "aws_iam_instance_profile" "bastion_instance_profile" {
-  name = "${var.name}-profile"
+  name  = "${var.name}-profile"
   roles = ["${aws_iam_role.bastion_role.name}"]
 }
 
 resource "aws_iam_role" "bastion_role" {
   name = "${var.name}-role"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -328,19 +333,22 @@ resource "aws_iam_role_policy" "s3_readonly" {
 EOF
 }
 
-# Elastic IP
+
+## Elastic IP
 resource "aws_eip" "bastion_eip" {
   count = "${length(split(",", var.aws_zones))}"
   vpc   = "true"
 }
 
-# Userdata Configuration
+
+## Userdata Configuration
 resource "template_file" "bastion_userdata" {
   lifecycle {
     create_before_destroy = "true"
   }
 
   template = "${var.bastion_userdata}"
+
   vars {
     envtype    = "${var.envtype}"
     envname    = "${var.envname}"
@@ -350,24 +358,25 @@ resource "template_file" "bastion_userdata" {
   }
 }
 
-# Launch Configuration
+
+## Launch Configuration
 resource "aws_launch_configuration" "lc" {
   lifecycle {
     create_before_destroy = true
   }
 
-  security_groups = ["${aws_security_group.bastion_external.id}","${aws_security_group.bastion_internal.id}"]
-  image_id = "${var.ami_id}"
-  instance_type = "${var.instance_type}"
-  iam_instance_profile = "${aws_iam_instance_profile.bastion_instance_profile.id}"
-  key_name = "${var.key_name}"
-  user_data = "${template_file.bastion_userdata.rendered}"
+  security_groups             = ["${aws_security_group.bastion_external.id}", "${aws_security_group.bastion_internal.id}"]
+  image_id                    = "${var.ami_id}"
+  instance_type               = "${var.instance_type}"
+  iam_instance_profile        = "${aws_iam_instance_profile.bastion_instance_profile.id}"
+  key_name                    = "${var.key_name}"
+  user_data                   = "${template_file.bastion_userdata.rendered}"
   associate_public_ip_address = "false"
-  enable_monitoring = "${var.detailed_monitoring}"
+  enable_monitoring           = "${var.detailed_monitoring}"
 }
 
-# Auto-Scaling Group Configuration
 
+## Auto-Scaling Group Configuration
 resource "aws_sns_topic" "bastion_asg" {
   name = "${var.name}-sns-topic"
 }
@@ -376,15 +385,17 @@ resource "aws_autoscaling_notification" "bastion_notifications" {
   group_names = [
     "${aws_autoscaling_group.asg.name}",
   ]
-  notifications  = [
+
+  notifications = [
     "autoscaling:EC2_INSTANCE_LAUNCH",
   ]
+
   topic_arn = "${aws_sns_topic.bastion_asg.arn}"
 }
 
 resource "aws_autoscaling_group" "asg" {
-  name = "${var.name}"
-  availability_zones = ["${split(",", var.aws_zones)}"]
+  name                = "${var.name}"
+  availability_zones  = ["${split(",", var.aws_zones)}"]
   vpc_zone_identifier = ["${join(",", aws_subnet.public.*.id)}"]
 
   launch_configuration = "${aws_launch_configuration.lc.name}"
@@ -393,21 +404,62 @@ resource "aws_autoscaling_group" "asg" {
   max_size = "${length(split(",", var.aws_zones))}"
 
   health_check_grace_period = "${var.health_check_grace_period}"
-  health_check_type = "${var.health_check_type}"
+  health_check_type         = "${var.health_check_type}"
 
-  tag { key = "Name" value = "${var.name}" propagate_at_launch = true }
-  tag { key = "Environment" value = "${var.envname}" propagate_at_launch = true }
-  tag { key = "EnvType" value = "${var.envtype}" propagate_at_launch = true }
-  tag { key = "Service" value = "${var.profile}" propagate_at_launch = true }
-  tag { key = "expected_EIPs" value = "${join(",", aws_eip.bastion_eip.*.public_ip)}" propagate_at_launch = true }
-  tag { key = "private_subnets" value = "${join(",", aws_subnet.private.*.id)}" propagate_at_launch = true }
+  tag {
+    key = "Name"
 
+    value = "${var.name}"
+
+    propagate_at_launch = true
+  }
+
+  tag {
+    key = "Environment"
+
+    value = "${var.envname}"
+
+    propagate_at_launch = true
+  }
+
+  tag {
+    key = "EnvType"
+
+    value = "${var.envtype}"
+
+    propagate_at_launch = true
+  }
+
+  tag {
+    key = "Service"
+
+    value = "${var.profile}"
+
+    propagate_at_launch = true
+  }
+
+  tag {
+    key = "expected_EIPs"
+
+    value = "${join(",", aws_eip.bastion_eip.*.public_ip)}"
+
+    propagate_at_launch = true
+  }
+
+  tag {
+    key = "private_subnets"
+
+    value = "${join(",", aws_subnet.private.*.id)}"
+
+    propagate_at_launch = true
+  }
 }
 
-# External Security Group
+
+## External Security Group
 resource "aws_security_group" "bastion_external" {
-  name = "${var.name}-external-sg"
-  vpc_id = "${aws_vpc.vpc.id}"
+  name        = "${var.name}-external-sg"
+  vpc_id      = "${aws_vpc.vpc.id}"
   description = "Bastion security group"
 
   egress {
@@ -425,10 +477,11 @@ resource "aws_security_group" "bastion_external" {
   }
 }
 
-# Internal Security Group
+
+## Internal Security Group
 resource "aws_security_group" "bastion_internal" {
-  name = "${var.name}-internal-sg"
-  vpc_id = "${aws_vpc.vpc.id}"
+  name        = "${var.name}-internal-sg"
+  vpc_id      = "${aws_vpc.vpc.id}"
   description = "Bastion security group"
 
   egress {
