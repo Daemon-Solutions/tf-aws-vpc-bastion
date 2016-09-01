@@ -101,8 +101,8 @@ resource "aws_sns_topic_subscription" "bastion_asg" {
 }
 
 resource "aws_lambda_function" "attach_eip" {
-  filename         = "./include/associateEIP.zip"
-  source_code_hash = "${base64sha256(file("./include/associateEIP.zip"))}"
+  filename         = "${path.module}/include/associateEIP.zip"
+  source_code_hash = "${base64sha256(file("${path.module}/include/associateEIP.zip"))}"
   function_name    = "${var.name}-lambda-function"
   role             = "${aws_iam_role.bastion_lambda_role.arn}"
   handler          = "associateEIP.lambda_handler"
