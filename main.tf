@@ -151,6 +151,27 @@ resource "aws_iam_role_policy" "bastion_lambda_ec2_describe" {
 EOF
 }
 
+resource "aws_iam_role_policy" "bastion_lambda_asg_describe" {
+  name = "${var.name}-asg-describe"
+
+  role = "${aws_iam_role.bastion_lambda_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "autoscaling:DescribeAutoScalingInstances"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role_policy" "bastion_lambda_logs" {
   name = "${var.name}-lambda-logs"
 
