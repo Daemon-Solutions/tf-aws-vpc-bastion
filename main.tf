@@ -3,7 +3,9 @@ resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc_cidr}"
 
   tags {
-    Name = "${var.name}-vpc"
+    Name = "${var.name}-${var.envname}"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -12,7 +14,9 @@ resource "aws_vpc_dhcp_options" "vpc" {
   domain_name_servers = ["${split(",", var.domain_name_servers)}"]
 
   tags {
-    Name = "${var.name}"
+    Name = "${var.name}-${var.envname}"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -27,7 +31,9 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
-    Name = "${var.name}-igw"
+    Name = "${var.name}-${var.envname}"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -39,7 +45,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = "false"
 
   tags {
-    Name = "${var.name}-public"
+    Name = "${var.name}-${var.envname}-public"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -48,7 +56,9 @@ resource "aws_route_table" "public" {
   vpc_id     = "${aws_vpc.vpc.id}"
 
   tags {
-    Name = "${var.name}-public-route"
+    Name = "${var.name}-${var.envname}-public"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -67,7 +77,9 @@ resource "aws_subnet" "private" {
   count             = "${length(split(",", var.private_subnets))}"
 
   tags {
-    Name = "${var.name}-private"
+    Name = "${var.name}-${var.envname}-private"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -76,7 +88,9 @@ resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
-    Name = "${var.name}-private-route"
+    Name = "${var.name}-${var.envname}-private"
+    Environment = "${var.envname}"
+    EnvType     = "${var.envtype}"
   }
 }
 
@@ -105,7 +119,7 @@ resource "aws_sns_topic_subscription" "bastion_asg" {
 resource "aws_lambda_function" "attach_eip" {
   filename         = "${path.module}/include/associateEIP.zip"
   source_code_hash = "${base64sha256(file("${path.module}/include/associateEIP.zip"))}"
-  function_name    = "${var.name}-lambda-function"
+  function_name    = "${var.name}-${var.envname}-bastion"
   role             = "${aws_iam_role.bastion_lambda_role.arn}"
   handler          = "associateEIP.lambda_handler"
   runtime          = "python2.7"
@@ -113,7 +127,7 @@ resource "aws_lambda_function" "attach_eip" {
 }
 
 resource "aws_iam_role" "bastion_lambda_role" {
-  name = "${var.name}-lambda-iam-role"
+  name = "${var.name}-${var.envname}-lambda"
 
   assume_role_policy = <<EOF
 {
@@ -133,7 +147,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bastion_lambda_ec2_describe" {
-  name = "${var.name}-lambda-ec2-describe"
+  name = "${var.name}-${var.envname}-lambda-ec2-describe"
 
   role = "${aws_iam_role.bastion_lambda_role.id}"
 
@@ -155,7 +169,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bastion_lambda_asg_describe" {
-  name = "${var.name}-asg-describe"
+  name = "${var.name}-${var.envname}-lambda-asg-describe"
 
   role = "${aws_iam_role.bastion_lambda_role.id}"
 
@@ -176,7 +190,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bastion_lambda_logs" {
-  name = "${var.name}-lambda-logs"
+  name = "${var.name}-${var.envname}-lambda-cloudwatch-logs"
 
   role = "${aws_iam_role.bastion_lambda_role.id}"
 
@@ -200,7 +214,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bastion_lambda_eip_associate" {
-  name = "${var.name}-lambda-eip-associate"
+  name = "${var.name}-${var.envname}-lambda-eip-associate"
 
   role = "${aws_iam_role.bastion_lambda_role.id}"
 
@@ -221,7 +235,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bastion_lambda_routes" {
-  name = "${var.name}-lambda-routes"
+  name = "${var.name}-${var.envname}-lambda-routes"
 
   role = "${aws_iam_role.bastion_lambda_role.id}"
 
@@ -245,12 +259,12 @@ EOF
 
 ## IAM Instance Profile
 resource "aws_iam_instance_profile" "bastion_instance_profile" {
-  name  = "${var.name}-profile"
+  name  = "${var.name}-${var.envname}-bastion"
   roles = ["${aws_iam_role.bastion_role.name}"]
 }
 
 resource "aws_iam_role" "bastion_role" {
-  name = "${var.name}-role"
+  name = "${var.name}-${var.envname}-bastion"
 
   assume_role_policy = <<EOF
 {
@@ -270,7 +284,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ec2_describe" {
-  name = "${var.name}-ec2_describe"
+  name = "${var.name}-${var.envname}-bastion-ec2-describe"
 
   role = "${aws_iam_role.bastion_role.id}"
 
@@ -291,7 +305,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ec2_attach" {
-  name = "${var.name}-ec2_attach"
+  name = "${var.name}-bastion-ec2-attach"
 
   role = "${aws_iam_role.bastion_role.id}"
 
@@ -312,7 +326,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "s3_readonly" {
-  name = "${var.name}-s3_readonly"
+  name = "${var.name}-bastion-s3-readonly"
 
   role = "${aws_iam_role.bastion_role.id}"
 
@@ -378,7 +392,7 @@ resource "aws_launch_configuration" "lc" {
 
 ## Auto-Scaling Group Configuration
 resource "aws_sns_topic" "bastion_asg" {
-  name = "${var.name}-sns-topic"
+  name = "${var.name}-${var.envname}-bastion"
 }
 
 resource "aws_autoscaling_notification" "bastion_notifications" {
@@ -394,7 +408,7 @@ resource "aws_autoscaling_notification" "bastion_notifications" {
 }
 
 resource "aws_autoscaling_group" "asg" {
-  name                = "${var.name}"
+  name                = "${var.name}-${var.envname}-bastions"
   availability_zones  = ["${split(",", var.aws_zones)}"]
   vpc_zone_identifier = ["${join(",", aws_subnet.public.*.id)}"]
 
@@ -409,7 +423,7 @@ resource "aws_autoscaling_group" "asg" {
   tag {
     key = "Name"
 
-    value = "${var.name}"
+    value = "${var.name}-${var.envname}-bastion"
 
     propagate_at_launch = true
   }
@@ -458,7 +472,7 @@ resource "aws_autoscaling_group" "asg" {
 
 ## External Security Group
 resource "aws_security_group" "bastion_external" {
-  name        = "${var.name}-external-sg"
+  name        = "${var.name}-${var.envname}-bastion-external"
   vpc_id      = "${aws_vpc.vpc.id}"
   description = "Bastion security group"
 
@@ -480,7 +494,7 @@ resource "aws_security_group" "bastion_external" {
 
 ## Internal Security Group
 resource "aws_security_group" "bastion_internal" {
-  name        = "${var.name}-internal-sg"
+  name        = "${var.name}-${var.envname}-bastion-internal"
   vpc_id      = "${aws_vpc.vpc.id}"
   description = "Bastion security group"
 
