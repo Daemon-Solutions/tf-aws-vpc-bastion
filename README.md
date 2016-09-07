@@ -1,14 +1,68 @@
 # tf-aws-vpc-nat
 
-A Terraform module that creates a VPC, public and private subnets,
-NAT/Bastion instances and the associated routes from private subnets
-to the public subnets and NAT/Bastion instances. The module uses a
-Lambda Function to attach EIPs to the NAT/Bastions instances and then
-update routing tables accordingly.
+This module will create the below resources:
 
-The module currently creates two Security Groups, one internal and
-one external for SSH access.
+- VPC
+- IGW
+- Public Subnets
+- Private Subnets
+- Route Tables
+- Lambda Function (attach EIPs to Bastion hosts and update the route tables)
+- SNS Topic
+- Lambda SNS Subscription (for Bastion ASG event notifications)
+- Lambda IAM role and associated policies (for EIP attachment and route changes)
+- Bastion IAM role and associated policies (to read from S3 yum repos)
+- EIPs for attachment to Bastion instances
+- Bastion Launch Configuration (defaults to t2.micro)
+- Bastion ASG (sends ASG events to SNS to trigger Lambda)
+- Internal Bastion SG for access from the VPC
+- External Bastion SG for SSH access
+
+Resource numbers will differ based on the number of AZs passed to Terraform.
+If you pass three AZs you will have an ASG with three instances, three EIPs,
+three of each subnet and so on. If you are in a region such as eu-central-1
+with only two zones then the module will handle this and only create two
+resources where applicable.
+
+The module assumes you are happy with a set of Bastions per VPC. Using this
+module it would be sensible to host all `nonprod` infrastructure in a single
+VPC. If you don't do this you will have a lot of Bastions.
 
 ## Usage
 
+Call the module:
 
+```
+module "bastions" {
+  source = "/home/chris/dev/tf-aws-vpc-bastion"
+
+  name              = "projectx"
+  envname           = "dev"
+  envtype           = "nonprod"
+  vpc_cidr          = "172.28.0.0/21"
+  public_subnets    = "172.28.0.0/24,172.28.1.0/24,172.28.2.0/24"
+  private_subnets   = "172.28.3.0/24,172.28.4.0/24,172.28.5.0/24"
+  domain            = "example.com"
+  ami_id            = "ami-00000000"
+  bastion_userdata  = "${file("./include/bastion_userdata.tmpl")}"
+  bastion_ssh_cidrs = "88.97.72.136/32,54.76.122.23/32"
+  aws_zones         = "eu-west-1a,eu-west-1b,eu-west-1c"
+  aws_region        = "eu-west-1"
+}
+```
+
+## Variables
+- `name` - Used to identify your resources, the project name is sensible
+- `envname` - You probably only want a `nonprod` and `prod` VPC
+- `envtype` - usually `prod` or `nonprod`
+- `vpc_cidr` - CIDR to use for your VPC
+- `public_subnets` - The public subnets the bastions will sit in
+- `private_subnets` - The private subnets your infrastructure will sit in
+- `domain` - The domain for your environment (this is only used in userdata)
+- `ami_id` - The AWS AMI to use, should be a Linux image like CentOS or Debian
+- `bastion_userdata` - The template file to use for bastion userdata
+- `bastion_ssh_cidrs` - IPs allowed SSH access to Bastions from the internet
+- `aws_zones` - AWS zones to use
+- `aws_region` - AWS region to use
+
+## Outputs
