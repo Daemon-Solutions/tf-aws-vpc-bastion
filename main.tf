@@ -11,7 +11,7 @@ resource "aws_vpc" "vpc" {
 
 resource "aws_vpc_dhcp_options" "vpc" {
   domain_name         = "${var.domain}"
-  domain_name_servers = ["${split(",", var.domain_name_servers)}"]
+  domain_name_servers = ["${var.domain_name_servers}"]
 
   tags {
     Name = "${var.name}-${var.envname}"
@@ -38,10 +38,10 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_subnet" "public" {
-  count                   = "${length(split(",", var.public_subnets))}"
+  count                   = "${length(var.public_subnets)}"
   vpc_id                  = "${aws_vpc.vpc.id}"
-  cidr_block              = "${element(split(",", var.public_subnets), count.index)}"
-  availability_zone       = "${element(split(",", var.aws_zones), count.index)}"
+  cidr_block              = "${element(var.public_subnets, count.index)}"
+  availability_zone       = "${element(split(",",lookup(var.aws_zones,var.aws_region)), count.index)}"
   map_public_ip_on_launch = "false"
 
   tags {
@@ -63,7 +63,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = "${length(split(",", var.public_subnets))}"
+  count          = "${length(var.public_subnets)}"
   subnet_id      = "${element(aws_subnet.public.*.id, count.index)}"
   route_table_id = "${aws_route_table.public.id}"
 }
@@ -72,9 +72,9 @@ resource "aws_route_table_association" "public" {
 ## Private Subnets
 resource "aws_subnet" "private" {
   vpc_id            = "${aws_vpc.vpc.id}"
-  cidr_block        = "${element(split(",", var.private_subnets), count.index)}"
-  availability_zone = "${element(split(",", var.aws_zones), count.index)}"
-  count             = "${length(split(",", var.private_subnets))}"
+  cidr_block        = "${element(var.private_subnets, count.index)}"
+  availability_zone = "${element(split(",",lookup(var.aws_zones,var.aws_region)), count.index)}"
+  count             = "${length(var.private_subnets)}"
 
   tags {
     Name = "${var.name}-${var.envname}-private"
@@ -84,7 +84,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_route_table" "private" {
-  count  = "${length(split(",", var.private_subnets))}"
+  count  = "${length(var.private_subnets)}"
   vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
@@ -95,7 +95,7 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table_association" "private" {
-  count          = "${length(split(",", var.private_subnets))}"
+  count          = "${length(var.private_subnets)}"
   subnet_id      = "${element(aws_subnet.private.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
 }
@@ -350,7 +350,7 @@ EOF
 
 ## Elastic IP
 resource "aws_eip" "bastion_eip" {
-  count = "${length(split(",", var.aws_zones))}"
+  count = "${length(var.aws_zones)}"
   vpc   = "true"
 }
 
@@ -409,13 +409,13 @@ resource "aws_autoscaling_notification" "bastion_notifications" {
 
 resource "aws_autoscaling_group" "asg" {
   name                = "${var.name}-${var.envname}-bastions"
-  availability_zones  = ["${split(",", var.aws_zones)}"]
-  vpc_zone_identifier = ["${join(",", aws_subnet.public.*.id)}"]
+  availability_zones  = ["${element(split(",",lookup(var.aws_zones,var.aws_region)), count.index)}"]
+  vpc_zone_identifier = ["${aws_subnet.public.*.id}"]
 
   launch_configuration = "${aws_launch_configuration.lc.name}"
 
-  min_size = "${length(split(",", var.aws_zones))}"
-  max_size = "${length(split(",", var.aws_zones))}"
+  min_size = "${length(lookup(var.aws_zones,var.aws_region))}"
+  max_size = "${length(lookup(var.aws_zones,var.aws_region))}"
 
   health_check_grace_period = "${var.health_check_grace_period}"
   health_check_type         = "${var.health_check_type}"
@@ -487,7 +487,7 @@ resource "aws_security_group" "bastion_external" {
     from_port   = "22"
     to_port     = "22"
     protocol    = "tcp"
-    cidr_blocks = ["${split(",", var.bastion_ssh_cidrs)}"]
+    cidr_blocks = ["${var.bastion_ssh_cidrs}"]
   }
 }
 
