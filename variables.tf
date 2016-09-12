@@ -59,6 +59,12 @@ variable "health_check_grace_period" {
 
 
 ## Security Groups Variables
+#
+# - 195.102.251.16/28 -- LinuxIT Bristol
+# - 54.76.122.23/32   -- Bashton OpenVPN
+# - 88.97.72.136/32   -- Bashton Office
+# - 195.8.68.130/32   -- Claranet London Office
+#
 variable "bastion_ssh_cidrs" {
-  default = "88.97.72.136/32,54.76.122.23/32"
+  default = "88.97.72.136/32,54.76.122.23/32,195.102.251.16/28,195.8.68.130/32"
 }
