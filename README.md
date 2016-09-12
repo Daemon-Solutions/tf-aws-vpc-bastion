@@ -44,7 +44,7 @@ module "bastions" {
   private_subnets   = "172.28.3.0/24,172.28.4.0/24,172.28.5.0/24"
   domain            = "example.com"
   ami_id            = "ami-00000000"
-  bastion_userdata  = "${file("./include/bastion_userdata.tmpl")}"
+  bastion_userdata  = "${file("bastion_userdata.tmpl")}"
   bastion_ssh_cidrs = "88.97.72.136/32,54.76.122.23/32"
   aws_zones         = "eu-west-1a,eu-west-1b,eu-west-1c"
   aws_region        = "eu-west-1"
