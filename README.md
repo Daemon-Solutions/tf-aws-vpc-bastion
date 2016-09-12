@@ -66,3 +66,27 @@ module "bastions" {
 - `aws_region` - AWS region to use
 
 ## Outputs
+- `vpc_id` - VPC ID
+- `vpc_cidr` - VPC CIDR
+- `availability_zones` - AWS availability zones in use
+- `public_subnets` - Comma separated list of public subnets
+- `public_route_tables` - Comma separated list of public subnet route tables
+- `private_subnets` - Comma separated list of private subnets
+- `private_route_tables` - Comma separated list of private subnet route tables
+- `bastion_userdata_redndered` - Rendered version of bastion userdata
+- `bastion_iam_profile_id` - Bastion instance IAM profile ID
+- `bastion_iam_role_id` - Bastion instance IAM role ID
+- `bastion_eip_ids` - Comma separated list of EIP IDs to be attached to bastions
+- `bastion_eip` - Comma separated list of EIP IPs to be attached to bastions
+- `launch_config_id` Bastion launch configuration ID
+- `asg_id` - Bastion ASG ID
+- `asg_name` - Bastion ASG name
+- `lambda_arn` - Lambda function ARN
+- `lambda_iam_role_id` - Lambda IAM role ID
+- `bastion_sns_arn` - Bastion ASG notification SNS ARN
+- `bastion_sns_id` - Bastion ASG notification SNS ID
+- `bastion_sns_subscription_arn` - Bastion ASG notification SNS subscription ARN
+- `bastion_sns_subscription_id` - Bastion ASG notification SNS subscription ID
+- `bastion_external_sg_id` - Bastion external SG ID
+- `bastion_internal_sg_id` - Bastion internal SG ID
+
