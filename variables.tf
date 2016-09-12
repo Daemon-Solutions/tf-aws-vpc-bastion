@@ -11,9 +11,15 @@ variable "profile" {
 
 variable "domain" {}
 
-variable "aws_region" {}
+variable "aws_region" {
+  default = "eu-west-1"
+}
 
-variable "aws_zones" {}
+variable "aws_zones" {
+  default = {
+    eu-west-1 = "eu-west-1a,eu-west-1b,eu-west-1c"
+  }
+}
 
 
 ## VPC Variables
