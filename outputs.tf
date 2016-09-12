@@ -8,25 +8,25 @@ output "vpc_cidr" {
 }
 
 output "availability_zones" {
-  value = "${join(",", aws_subnet.public.*.availability_zone)}"
+  value = ["${aws_subnet.public.*.availability_zone}"]
 }
 
 
 ## Subnet Outputs
 output "public_subnets" {
-  value = "${join(",", aws_subnet.public.*.id)}"
+  value = ["${aws_subnet.public.*.id}"]
 }
 
 output "public_route_tables" {
-  value = "${join(",", aws_route_table.public.*.id)}"
+  value = ["${aws_route_table.public.*.id}"]
 }
 
 output "private_subnets" {
-  value = "${join(",", aws_subnet.private.*.id)}"
+  value = ["${aws_subnet.private.*.id}"]
 }
 
 output "private_route_tables" {
-  value = "${join(",", aws_route_table.private.*.id)}"
+  value = ["${aws_route_table.private.*.id}"]
 }
 
 
@@ -48,11 +48,11 @@ output "bastion_iam_role_id" {
 
 ## EIP Outputs
 output "bastion_eip_ids" {
-  value = "${join(",", aws_eip.bastion_eip.*.id)}"
+  value = ["${aws_eip.bastion_eip.*.id}"]
 }
 
 output "bastion_eips" {
-  value = "${join(",", aws_eip.bastion_eip.*.public_ip)}"
+  value = ["${aws_eip.bastion_eip.*.public_ip}"]
 }
 
 
