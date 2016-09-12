@@ -1,4 +1,4 @@
-# tf-aws-vpc-nat
+# tf-aws-vpc-bastion
 
 This module will create the below resources:
 
