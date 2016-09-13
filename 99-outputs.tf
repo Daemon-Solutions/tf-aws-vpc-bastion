@@ -11,7 +11,6 @@ output "availability_zones" {
   value = ["${aws_subnet.public.*.availability_zone}"]
 }
 
-
 ## Subnet Outputs
 output "public_subnets" {
   value = ["${aws_subnet.public.*.id}"]
@@ -29,12 +28,10 @@ output "private_route_tables" {
   value = ["${aws_route_table.private.*.id}"]
 }
 
-
 ## Userdata Ouputs
 output "bastion_userdata_redndered" {
   value = "${template_file.bastion_userdata.rendered}"
 }
-
 
 ## IAM Outputs
 output "bastion_iam_profile_id" {
@@ -45,7 +42,6 @@ output "bastion_iam_role_id" {
   value = "${aws_iam_role.bastion_role.id}"
 }
 
-
 ## EIP Outputs
 output "bastion_eip_ids" {
   value = ["${aws_eip.bastion_eip.*.id}"]
@@ -55,12 +51,10 @@ output "bastion_eips" {
   value = ["${aws_eip.bastion_eip.*.public_ip}"]
 }
 
-
 ## Launch Config Outputs
 output "launch_config_id" {
   value = "${aws_launch_configuration.lc.id}"
 }
-
 
 ## Autoscaling Group Outputs
 output "asg_id" {
@@ -71,7 +65,6 @@ output "asg_name" {
   value = "${aws_autoscaling_group.asg.name}"
 }
 
-
 ## Lambda Outputs
 output "lambda_arn" {
   value = "aws_lambda_function.attach_eip.arn"
@@ -80,7 +73,6 @@ output "lambda_arn" {
 output "lambda_iam_role_id" {
   value = "${aws_iam_role.bastion_lambda_role.id}"
 }
-
 
 ## SNS Outputs
 output "bastion_sns_arn" {
@@ -98,7 +90,6 @@ output "bastion_sns_subscription_arn" {
 output "bastion_sns_subscription_id" {
   value = "${aws_sns_topic_subscription.bastion_asg.id}"
 }
-
 
 ## Security Group Outputs
 output "bastion_external_sg_id" {
