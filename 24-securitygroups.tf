@@ -10,13 +10,45 @@ resource "aws_security_group" "bastion_external" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
 
-  ingress {
-    from_port   = "22"
-    to_port     = "22"
-    protocol    = "tcp"
-    cidr_blocks = ["${var.bastion_ssh_cidrs}"]
-  }
+resource "aws_security_group_rule" "bastion_external_ssh" {
+  type        = "ingress"
+  from_port   = "22"
+  to_port     = "22"
+  protocol    = "tcp"
+  cidr_blocks = ["${var.bastion_ssh_cidrs}"]
+  security_group_id = "${aws_security_group.bastion_external.id}"
+}
+
+resource "aws_security_group_rule" "bastion_external_rdp" {
+  count       = "${var.enable_windows}"
+  type        = "ingress"
+  from_port   = "3389"
+  to_port     = "3389"
+  protocol    = "tcp"
+  cidr_blocks = ["${var.bastion_ssh_cidrs}"]
+  security_group_id = "${aws_security_group.bastion_external.id}"
+}
+
+resource "aws_security_group_rule" "bastion_external_wirm_http" {
+  count       = "${var.enable_windows}"
+  type        = "ingress"
+  from_port   = "5985"
+  to_port     = "5985"
+  protocol    = "tcp"
+  cidr_blocks = ["${var.bastion_ssh_cidrs}"]
+  security_group_id = "${aws_security_group.bastion_external.id}"
+}
+
+resource "aws_security_group_rule" "bastion_external_wirm_https" {
+  count       = "${var.enable_windows}"
+  type        = "ingress"
+  from_port   = "5986"
+  to_port     = "5986"
+  protocol    = "tcp"
+  cidr_blocks = ["${var.bastion_ssh_cidrs}"]
+  security_group_id = "${aws_security_group.bastion_external.id}"
 }
 
 ## Internal Security Group
