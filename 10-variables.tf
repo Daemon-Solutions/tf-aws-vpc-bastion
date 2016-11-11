@@ -7,11 +7,18 @@ variable "envname" {}
 
 variable "envtype" {}
 
+variable "enable_windows" {
+  default = 0
+}
+
 variable "profile" {
   default = "bastion"
 }
 
 variable "domain" {}
+variable "domain_password" {
+  default = ""
+}
 
 variable "aws_region" {
   default = "eu-west-1"
@@ -42,11 +49,21 @@ variable "domain_name_servers" {
 
 ## Userdata Variables
 variable "bastion_userdata" {}
+variable "bastion_win_userdata" {
+  default = ""
+}
 
 ## Launch Configuration Variables
 variable "ami_id" {}
+variable "windows_ami_id" {
+  default = ""
+}
 
 variable "instance_type" {
+  default = "t2.micro"
+}
+
+variable "windows_instance_type" {
   default = "t2.micro"
 }
 
