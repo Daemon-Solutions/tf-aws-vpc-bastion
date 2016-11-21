@@ -10,6 +10,9 @@ variable "envtype" {}
 variable "enable_windows" {
   default = 0
 }
+variable "enable_linux" {
+  default = 1
+}
 
 variable "profile" {
   default = "bastion"

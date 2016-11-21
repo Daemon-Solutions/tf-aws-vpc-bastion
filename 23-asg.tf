@@ -6,6 +6,7 @@ resource "aws_eip" "bastion_eip" {
 
 ## Userdata Configuration
 resource "template_file" "bastion_userdata" {
+  count    = "${var.enable_linux}"
   lifecycle {
     create_before_destroy = "true"
   }
@@ -57,6 +58,8 @@ resource "template_file" "bastion_domain_join_ps1" {
 
 ## Launch Configuration
 resource "aws_launch_configuration" "lc" {
+  count    = "${var.enable_linux}"
+
   lifecycle {
     create_before_destroy = true
   }
@@ -107,6 +110,7 @@ resource "aws_autoscaling_notification" "bastion_notifications" {
 }
 
 resource "aws_autoscaling_group" "asg" {
+  count    = "${var.enable_linux}"
   name                = "${var.name}-${var.envname}-bastions"
   availability_zones  = ["${split(",",lookup(var.aws_zones,var.aws_region))}"]
   vpc_zone_identifier = ["${aws_subnet.public.*.id}"]
