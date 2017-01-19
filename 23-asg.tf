@@ -14,7 +14,6 @@ resource "template_file" "bastion_userdata" {
   template = "${var.bastion_userdata}"
 
   vars {
-    customer   = "${var.customer}"
     envtype    = "${var.envtype}"
     envname    = "${var.envname}"
     profile    = "${var.profile}"
