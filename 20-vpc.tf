@@ -1,4 +1,5 @@
 ## VPC
+
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc_cidr}"
 
@@ -40,7 +41,7 @@ resource "aws_subnet" "public" {
   count                   = "${length(var.public_subnets)}"
   vpc_id                  = "${aws_vpc.vpc.id}"
   cidr_block              = "${element(var.public_subnets, count.index)}"
-  availability_zone       = "${element(split(",",lookup(var.aws_zones,var.aws_region)), count.index)}"
+  availability_zone       = "${element(var.aws_zones, count.index)}"
   map_public_ip_on_launch = "false"
 
   tags {
@@ -75,7 +76,7 @@ resource "aws_route_table_association" "public" {
 resource "aws_subnet" "private" {
   vpc_id            = "${aws_vpc.vpc.id}"
   cidr_block        = "${element(var.private_subnets, count.index)}"
-  availability_zone = "${element(split(",",lookup(var.aws_zones,var.aws_region)), count.index)}"
+  availability_zone = "${element(var.aws_zones, count.index)}"
   count             = "${length(var.private_subnets)}"
 
   tags {

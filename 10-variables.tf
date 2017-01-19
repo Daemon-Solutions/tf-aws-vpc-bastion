@@ -1,38 +1,22 @@
 ## Global Configuration
 variable "name" {}
 
-variable "customer" {}
-
 variable "envname" {}
 
 variable "envtype" {}
-
-variable "enable_windows" {
-  default = 0
-}
-variable "enable_linux" {
-  default = 1
-}
 
 variable "profile" {
   default = "bastion"
 }
 
 variable "domain" {}
-variable "domain_password" {
-  default = ""
-}
 
 variable "aws_region" {
   default = "eu-west-1"
 }
 
 variable "aws_zones" {
-  type = "map"
-
-  default = {
-    eu-west-1 = "eu-west-1a,eu-west-1b,eu-west-1c"
-  }
+  type = "list"
 }
 
 ## VPC Variables
@@ -52,21 +36,11 @@ variable "domain_name_servers" {
 
 ## Userdata Variables
 variable "bastion_userdata" {}
-variable "bastion_win_userdata" {
-  default = ""
-}
 
 ## Launch Configuration Variables
 variable "ami_id" {}
-variable "windows_ami_id" {
-  default = ""
-}
 
 variable "instance_type" {
-  default = "t2.micro"
-}
-
-variable "windows_instance_type" {
   default = "t2.micro"
 }
 
@@ -87,13 +61,28 @@ variable "health_check_grace_period" {
   default = 300
 }
 
-## Security Groups Variables
-#
-# - 195.102.251.16/28 -- LinuxIT Bristol
-# - 54.76.122.23/32   -- Bashton OpenVPN
-# - 88.97.72.136/32   -- Bashton Office
-# - 195.8.68.130/32   -- Claranet London Office
-#
 variable "bastion_ssh_cidrs" {
+  // 195.102.251.18/32 - Claranet Emersons Green
+  // 195.8.68.130/32 - Claranet SHR
+  // 195.8.70.0/24 - Claranet SHR
+  // 195.157.3.3/32 - Claranet SSL VPN
+  // 195.157.3.4/32 - Claranet SSL VPN
+  // 195.102.251.7/32 - Claranet Birchwood
+  // 195.216.14.9/32 - Claranet Barnwood
+  // 54.76.122.23/32 - Bashton EC2 OpenVPN
+  type = "list"
+
+  default = ["195.102.251.18/32",
+            "195.8.68.130/32",
+            "195.8.70.0/24",
+            "195.157.3.3/32",
+            "195.157.3.4/32",
+            "195.102.251.7/32",
+            "54.76.122.23/32"
+          ]
+  }
+  
+  
+  
   default = ["88.97.72.136/32", "54.76.122.23/32", "195.102.251.16/28", "195.8.68.130/32"]
 }
