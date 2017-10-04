@@ -58,7 +58,7 @@ variable "aws_zones" {
   description = "Map containing a list of AWS Availability Zones"
   type = "map"
   default = {
-    eu-west-1 = "eu-west-1b,eu-west-1c,eu-west-1d"
+    eu-west-1 = "eu-west-1a,eu-west-1b,eu-west-1c"
   }
 }
 
